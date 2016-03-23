@@ -1150,8 +1150,8 @@
         (when (string= note-edit-mode "XHTML")
           (setq evernote-note-xhtml-mode-content (buffer-string))
           (erase-buffer)
-          (enh-format-enml evernote-note-xhtml-mode-content (current-buffer))
-          (setq buffer-read-only t))
+          (enh-format-enml evernote-note-xhtml-mode-content (current-buffer)))
+          ;(setq buffer-read-only t)
         (evernote-mode note-guid)
         ; this must be after (evernote-mode) that setup the change major mode hooks.
         (enh-base-change-major-mode-from-note-name note-name)
@@ -2080,27 +2080,43 @@
      nil)))
 
 
+;; (defun enh-format-enml (content outbuf)
+;;   (if evernote-enml-formatter-command
+;;       (let ((infile (concat (make-temp-file "evernote-enml") ".html"))
+;;             (command (car evernote-enml-formatter-command))
+;;             (args (cdr evernote-enml-formatter-command)))
+;;         (setq args (append args (list infile)))
+;;         (with-temp-buffer
+;;           (insert content)
+;;           (write-region (point-min) (point-max) infile)
+;;           (message "") ; remove the message notifying writing to tmp file.
+;;           (let ((coding-system-for-read 'utf-8)
+;;                 (coding-system-for-write 'utf-8))
+;;             (apply 'call-process
+;;                    command
+;;                    infile
+;;                    outbuf
+;;                    nil
+;;                    args))))
+;;     (save-excursion ; insert the content as is.
+;;       (set-buffer outbuf)
+;;       (insert content))))
+
+
 (defun enh-format-enml (content outbuf)
-  (if evernote-enml-formatter-command
-      (let ((infile (concat (make-temp-file "evernote-enml") ".html"))
-            (command (car evernote-enml-formatter-command))
-            (args (cdr evernote-enml-formatter-command)))
-        (setq args (append args (list infile)))
-        (with-temp-buffer
-          (insert content)
-          (write-region (point-min) (point-max) infile)
-          (message "") ; remove the message notifying writing to tmp file.
-          (let ((coding-system-for-read 'utf-8)
-                (coding-system-for-write 'utf-8))
-            (apply 'call-process
-                   command
-                   infile
-                   outbuf
-                   nil
-                   args))))
-    (save-excursion ; insert the content as is.
-      (set-buffer outbuf)
-      (insert content))))
+  (let ((infile (concat (make-temp-file "evernote-enml") ".html"))
+        (note-name (buffer-name outbuf)))
+    (with-temp-buffer
+      (insert content)
+      (write-region (point-min) (point-max) infile)
+      (message "") ; remove the medsage notifying writing to tmp file
+      (eww-open-file infile)
+      )
+    (kill-buffer)
+    ;; (set-buffer (get-buffer "*eww*"))
+    ;; (rename-buffer (concat "eww-" note-name))
+    ;; (eww-mode)
+    ))
 
 
 (defun enh-clear-onmem-cache ()
